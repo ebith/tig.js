@@ -49,7 +49,7 @@ require('net').createServer((connection) => {
           });
 
           eventEmitter.on('tweet', function (status) {
-            if (status.screen_name === nick) { return; }
+            if (status.user.screen_name === nick) { return; }
             if (connection.writable) {
               const [name, text] = twitter.toReadable(status, nick);
               send(name, 'PRIVMSG', ['#timeline', text]);
@@ -61,7 +61,8 @@ require('net').createServer((connection) => {
           break;
         case 'PRIVMSG':
           if (args[0] === '#timeline') {
-            twitter.oauth.post('https://api.twitter.com/1.1/statuses/update.json', config.accessToken, config.accessTokenSecret, { status: args.slice(1).join(' ') }, (r, data, response) => {
+            const text = args.slice(1).join(' ').replace(/^:/, '');
+            twitter.oauth.post('https://api.twitter.com/1.1/statuses/update.json', config.accessToken, config.accessTokenSecret, { status: text }, (r, data, response) => {
               send(null, 'TOPIC', ['#timeline', JSON.parse(data).text]);
             });
           }
