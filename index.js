@@ -49,10 +49,13 @@ require('net').createServer((connection) => {
           });
 
           eventEmitter.on('tweet', function (status) {
-            if (status.user.screen_name === nick) { return; }
             if (connection.writable) {
               const [name, text] = twitter.toReadable(status, nick);
-              send(name, 'PRIVMSG', ['#timeline', text]);
+              if (name === nick) {
+                send(null, 'TOPIC', ['#timeline', text]);
+              } else {
+                send(name, 'PRIVMSG', ['#timeline', text]);
+              }
             } else {
               util.log(this);
               eventEmitter.removeListener('tweet', this._events.tweet);
@@ -62,8 +65,8 @@ require('net').createServer((connection) => {
         case 'PRIVMSG':
           if (args[0] === '#timeline') {
             const text = args.slice(1).join(' ').replace(/^:/, '');
-            twitter.oauth.post('https://api.twitter.com/1.1/statuses/update.json', config.accessToken, config.accessTokenSecret, { status: text }, (r, data, response) => {
-              send(null, 'TOPIC', ['#timeline', JSON.parse(data).text]);
+            twitter.oauth.post('https://api.twitter.com/1.1/statuses/update.json', config.accessToken, config.accessTokenSecret, { status: text }, (error, data, response) => {
+              if (error) { util.log(error); }
             });
           }
           break;
@@ -90,7 +93,7 @@ const twitter = {
     return text;
   },
   getLastStatus: (screen_name, callback) => {
-    twitter.oauth.get(`https://api.twitter.com/1.1/users/show.json?screen_name=${screen_name}`, config.accessToken, config.accessTokenSecret, (r, data, response) => {
+    twitter.oauth.get(`https://api.twitter.com/1.1/users/show.json?screen_name=${screen_name}`, config.accessToken, config.accessTokenSecret, (error, data, response) => {
       callback(JSON.parse(data));
     });
   },
