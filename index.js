@@ -58,7 +58,7 @@ require('net').createServer((connection) => {
               }
             } else {
               util.log(this);
-              eventEmitter.removeListener('tweet', this._events.tweet);
+              eventEmitter.removeListener('tweet', this._events.tweet[0]);
             }
           });
           break;
