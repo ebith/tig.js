@@ -122,7 +122,7 @@ const twitter = {
         for (const line of lines) {
           if (line !== '') {
             const status = JSON.parse(line);
-            if (status.text) {
+            if (status.text || status.event) {
               eventEmitter.emit('tweet', status);
             } else if (status.friends) {
               // 最初に送られてくるやつ
@@ -147,37 +147,36 @@ const twitter = {
     if (status.event) {
       switch (status.event) {
         case 'block':
-          name = status.source;
-          text = '\00310block\017'  + ` ${status.target} https://twitter.com/${status.source}`;
+          name = status.source.screen_name;
+          text = '\00310Block =>\017'  + ` ${status.target.screen_name} https://twitter.com/${status.source.screen_name}`;
           break;
         case 'unblock':
-          name = status.source;
-          text = '\00310unblock\017' + ` ${status.target} https://twitter.com/${status.source}`;
+          name = status.source.screen_name;
+          text = '\00310Unblock =>\017' + ` ${status.target.screen_name} https://twitter.com/${status.source.screen_name}`;
           break;
         case 'favorite':
-          if (status.source === nick) {}
-          name = status.source;
-          text = '\00310favorit\017' + ` ${status.target}: ${status.tartget_object}  https://twitter.com/${status.source}`;
+          name = status.source.screen_name;
+          text = '\00310Favorite =>\017' + ` ${status.target.screen_name}: ${twitter.expandUrl(status.target_object.text, status.target_object.entities)}  https://twitter.com/${status.source.screen_name}`;
           break;
         case 'unfavorite':
-          name = status.source;
-          text = '\00310unfavorit\017' + ` ${status.target}: ${status.tartget_object}  https://twitter.com/${status.source}`;
+          name = status.source.screen_name;
+          text = '\00310Unfavorite =>\017' + ` ${status.target.screen_name}: ${twitter.expandUrl(status.target_object.text, status.target_object.entities)}  https://twitter.com/${status.source.screen_name}`;
           break;
         case 'follow':
-          name = status.source;
-          text = '\00310follow\017' + ` ${status.target} https://twitter.com/${status.source}`;
+          name = status.source.screen_name;
+          text = '\00310Follow =>\017' + ` ${status.target.screen_name} https://twitter.com/${status.source.screen_name}`;
           break;
         case 'unfollow':
-          name = status.source;
-          text = '\00310unfollow\017' + ` ${status.target} https://twitter.com/${status.source}`;
+          name = status.source.screen_name;
+          text = '\00310Unfollow =>\017' + ` ${status.target.screen_name} https://twitter.com/${status.source.screen_name}`;
           break;
         case 'list_member_added':
-          name = status.source;
-          text = '\00310listd\017' + ` ${status.target} https://twitter.com/${status.source}`;
+          name = status.source.screen_name;
+          text = '\00310Listd =>\017' + ` ${status.target.screen_name} https://twitter.com/${status.source.screen_name}`;
           break;
         case 'list_member_removed':
-          name = status.source;
-          text = '\00310unlist\017' + ` ${status.target} https://twitter.com/${status.source}`;
+          name = status.source.screen_name;
+          text = '\00310Unlist =>\017' + ` ${status.target.screen_name} https://twitter.com/${status.source.screen_name}`;
           break;
         case 'list_created':
         case 'list_destroyed':
@@ -187,9 +186,7 @@ const twitter = {
         case 'quoted_tweet':
         case 'user_update':
       }
-    }
-
-    if (status.direct_message) {
+    } else if (status.direct_message) {
       name = status.direct_message.sender.screen_name;
       text = twitter.expandUrl(status.direct_message.text, status.direct_message.entities);
     } else if (status.quoted_status) {
