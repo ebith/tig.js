@@ -101,11 +101,11 @@ const twitter = {
     twitter.oauth = new (require('oauth')).OAuth( 'https://twitter.com/oauth/request_token', 'https://twitter.com/oauth/access_token', config.consumerKey, config.consumerSecret, '1.0A', null, 'HMAC-SHA1');
     twitter.connect();
   },
-  restartCount: 0,
+  reconnectCount: 0,
   reconnect: () => {
     setTimeout(()=>{ twitter.connect(); }, Math.pow(2, twitter.count) * 1000);
-    twitter.restartCount++;
-    util.log('restart stream');
+    twitter.reconnectCount++;
+    util.log('reconnect stream');
   },
   connect: () => {
     const request = twitter.oauth.get('https://userstream.twitter.com/1.1/user.json?replies=all', config.accessToken, config.accessTokenSecret);
