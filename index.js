@@ -94,6 +94,7 @@ require('net').createServer((connection) => {
 
 // Twitter {{{
 const twitter = {
+  stallTimer: null,
   expandUrl: (text, entities) => {
     const urls = entities.media ? entities.urls.concat(entities.media) : entities.urls;
     for (const url of urls) {
@@ -114,7 +115,7 @@ const twitter = {
   reconnect: () => {
     setTimeout(()=>{ twitter.connect(); }, Math.pow(2, twitter.count) * 1000);
     twitter.reconnectCount++;
-    util.log('reconnect stream');
+    util.log('reconnecting stream');
   },
   connect: () => {
     const request = twitter.oauth.get('https://userstream.twitter.com/1.1/user.json?replies=all', config.accessToken, config.accessTokenSecret);
@@ -124,6 +125,9 @@ const twitter = {
       response.setEncoding('utf8');
       let buffer = '';
       response.on('data', (data) => {
+        clearTimeout(twitter.stallTimer);
+        twitter.stallTimer = setTimeout(() => { twitter.reconnect(); }, 60000);
+
         buffer += data;
         let lines = buffer.split('\r\n');
         buffer = lines.pop();
