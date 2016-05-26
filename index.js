@@ -64,10 +64,19 @@ require('net').createServer((connection) => {
           break;
         case 'PRIVMSG':
           if (args[0] === '#timeline') {
-            const text = args.slice(1).join(' ').replace(/^:/, '');
-            twitter.oauth.post('https://api.twitter.com/1.1/statuses/update.json', config.accessToken, config.accessTokenSecret, { status: text }, (error, data, response) => {
-              if (error) { util.log(error); }
-            });
+            if (args[1] === ':\u0001ACTION') {
+              const action = args.slice(2).join(' ').replace('\u0001', '');
+              if (/r|reconnect/i.test(action)) {
+                send(null, 'NOTICE', ['#timeline', 'Reconnecting stream']);
+                twitter.reconnectCount = 0;
+                twitter.reconnect();
+              }
+            } else {
+              const text = args.slice(1).join(' ').replace(/^:/, '');
+              twitter.oauth.post('https://api.twitter.com/1.1/statuses/update.json', config.accessToken, config.accessTokenSecret, { status: text }, (error, data, response) => {
+                if (error) { util.log(error); }
+              });
+            }
           }
           break;
       }
