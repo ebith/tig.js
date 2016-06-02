@@ -1,12 +1,17 @@
 const config = require('./config');
-const util = require('util');
 const eventEmitter = new (require('events'))();
 const moment = require('moment');
 const unescape = require('lodash.unescape');
 
+const log = (...args) => {
+  if (process.env.NODE_ENV === 'development') {
+    require('util').log(args);
+  }
+}
+
 // IRCD {{{
-require('net').createServer((connection) => {
-  const send = (prefix, command, params = ['']) => {
+const ircd = {
+  send: (prefix, command, params = ['']) => {
     let msg = '';
     if (prefix) {
       msg += `:${prefix} `;
@@ -21,76 +26,82 @@ require('net').createServer((connection) => {
         msg += ` ${param}`;
       }
     }
-    util.log(`>> ${msg}`); // DEBUG
-    connection.write(`${msg}\r\n`);
-  }
+    eventEmitter.emit('send', msg);
+  },
+  init: () => {
+    ircd.server = require('net').createServer((connection) => {
+      eventEmitter.on('send', (msg) => {
+        log(`>> ${msg}`);
+        connection.write(`${msg}\r\n`);
+      });
 
-  let nick, buffer = '';
-  connection.on('data', (data) => {
-    buffer += data;
-    let lines = buffer.split('\r\n');
-    buffer = lines.pop();
+      let nick, buffer = '';
+      connection.on('data', (data) => {
+        buffer += data;
+        let lines = buffer.split('\r\n');
+        buffer = lines.pop();
 
-    for (const line of lines) {
-      const [command, ...args] = line.split(' ');
-      util.log('<< ', command, args); //DEBUG
-      switch (command) {
-        case 'NICK':
-          nick = args[0];
-          break;
-        case 'USER':
-          // client incoming
-          send(null, '001', [nick, 'Welcome to tig.js']);
-          send(`${args[0]}!${args[3]}@${connection.remoteAddress}`, 'JOIN', ['#timeline']);
-          send(null, 'MODE', ['#timeline', '+mot', args[0]]);
+        for (const line of lines) {
+          const [command, ...args] = line.split(' ');
+          log('<< ', command, args);
+          switch (command) {
+            case 'NICK':
+              nick = args[0];
+              break;
+            case 'USER':
+              // client incoming
+              ircd.send(null, '001', [nick, 'Welcome to tig.js']);
+              ircd.send(`${args[0]}!${args[3]}@${connection.remoteAddress}`, 'JOIN', ['#timeline']);
+              ircd.send(null, 'MODE', ['#timeline', '+mot', args[0]]);
 
-          twitter.getLastStatus(args[0], (user) => {
-            send(null, 'TOPIC', ['#timeline', user.status.text]);
-          });
-
-          eventEmitter.on('tweet', function (status) {
-            if (connection.writable) {
-              const [name, text] = twitter.toReadable(status, nick);
-              if (name === nick) {
-                send(null, 'TOPIC', ['#timeline', text]);
-              } else {
-                send(name, 'PRIVMSG', ['#timeline', text]);
-              }
-            } else {
-              util.log(this);
-              eventEmitter.removeListener('tweet', this._events.tweet[0]);
-            }
-          });
-          break;
-        case 'PRIVMSG':
-          if (args[0] === '#timeline') {
-            if (args[1] === ':\u0001ACTION') {
-              const action = args.slice(2).join(' ').replace('\u0001', '');
-              if (/r|reconnect/i.test(action)) {
-                send(null, 'NOTICE', ['#timeline', 'Reconnecting stream']);
-                twitter.reconnectCount = 0;
-                twitter.reconnect();
-              }
-            } else {
-              const text = args.slice(1).join(' ').replace(/^:/, '');
-              twitter.oauth.post('https://api.twitter.com/1.1/statuses/update.json', config.accessToken, config.accessTokenSecret, { status: text }, (error, data, response) => {
-                if (error) { util.log(error); }
+              twitter.getLastStatus(args[0], (user) => {
+                ircd.send(null, 'TOPIC', ['#timeline', user.status.text]);
               });
-            }
-          }
-          break;
-      }
-    }
-  });
-  connection.on('error', (error) => {
-    util.log(error);
-  });
-  connection.on('close', () => {
-    // connection close
-  });
-}).listen(process.env.PORT || 16668);
-// }}}
 
+              eventEmitter.on('tweet', function (status) {
+                if (connection.writable) {
+                  const [name, text] = twitter.toReadable(status, nick);
+                  if (name === nick) {
+                    ircd.send(null, 'TOPIC', ['#timeline', text]);
+                  } else {
+                    ircd.send(name, 'PRIVMSG', ['#timeline', text]);
+                  }
+                } else {
+                  log(this);
+                  eventEmitter.removeListener('tweet', this._events.tweet[0]);
+                }
+              });
+              break;
+            case 'PRIVMSG':
+              if (args[0] === '#timeline') {
+                if (args[1] === ':\u0001ACTION') {
+                  const action = args.slice(2).join(' ').replace('\u0001', '');
+                  if (/r|reconnect/i.test(action)) {
+                    twitter.reconnectCount = 0;
+                    twitter.reconnect();
+                  }
+                } else {
+                  const text = args.slice(1).join(' ').replace(/^:/, '');
+                  twitter.oauth.post('https://api.twitter.com/1.1/statuses/update.json', config.accessToken, config.accessTokenSecret, { status: text }, (error, data, response) => {
+                    if (error) { log(error); }
+                  });
+                }
+              }
+              break;
+          }
+        }
+      });
+      connection.on('error', (error) => {
+        log(error);
+      });
+      connection.on('close', () => {
+        // connection close
+      });
+    }).listen(process.env.PORT || 16668);
+  }
+}
+ircd.init();
+// }}}
 
 // Twitter {{{
 const twitter = {
@@ -115,7 +126,7 @@ const twitter = {
   reconnect: () => {
     setTimeout(()=>{ twitter.connect(); }, Math.pow(2, twitter.count) * 1000);
     twitter.reconnectCount++;
-    util.log('reconnecting stream');
+    ircd.send(null, 'NOTICE', ['#timeline', 'Reconnecting stream']);
   },
   connect: () => {
     const request = twitter.oauth.get('https://userstream.twitter.com/1.1/user.json?replies=all', config.accessToken, config.accessTokenSecret);
@@ -148,7 +159,7 @@ const twitter = {
       })
     });
     request.on('error', (error) => {
-      util.log(error);
+      log(error);
     });
     request.on('end', () => {
       twitter.reconnect();
