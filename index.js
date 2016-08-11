@@ -145,7 +145,13 @@ const twitter = {
 
         for (const line of lines) {
           if (line !== '') {
-            const status = JSON.parse(line);
+            let status;
+            try {
+              status = JSON.parse(line);
+            } catch(e) {
+              log(line);
+              status = null;
+            }
             if (status.text || status.event) {
               eventEmitter.emit('tweet', status);
             } else if (status.friends) {
