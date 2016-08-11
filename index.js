@@ -105,7 +105,6 @@ ircd.init();
 
 // Twitter {{{
 const twitter = {
-  stallTimer: null,
   expandUrl: (text, entities) => {
     const urls = entities.media ? entities.urls.concat(entities.media) : entities.urls;
     for (const url of urls) {
