@@ -123,15 +123,16 @@ const twitter = {
   },
   reconnectCount: 0,
   reconnect: () => {
+    twitter.stream.abort();
     setTimeout(()=>{ twitter.connect(); }, Math.pow(2, twitter.count) * 1000);
     twitter.reconnectCount++;
     ircd.send(null, 'NOTICE', ['#timeline', 'Reconnecting stream']);
   },
   connect: () => {
-    const request = twitter.oauth.get('https://userstream.twitter.com/1.1/user.json?replies=all', config.accessToken, config.accessTokenSecret);
-    // const request = oauth.get('https://stream.twitter.com/1.1/statuses/sample.json', config.accessToken, config.accessTokenSecret);
+    twitter.stream = twitter.oauth.get('https://userstream.twitter.com/1.1/user.json?replies=all', config.accessToken, config.accessTokenSecret);
+    // twitter.stream = oauth.get('https://stream.twitter.com/1.1/statuses/sample.json', config.accessToken, config.accessTokenSecret);
 
-    request.on('response', (response) => {
+    twitter.stream.on('response', (response) => {
       response.setEncoding('utf8');
       let buffer = '';
       response.on('data', (data) => {
@@ -163,13 +164,10 @@ const twitter = {
 
       })
     });
-    request.on('error', (error) => {
+    twitter.stream.on('error', (error) => {
       log(error);
     });
-    request.on('end', () => {
-      twitter.reconnect();
-    });
-    request.end();
+    twitter.stream.end();
   },
   toReadable: (status, nick) => {
     let name, text;
