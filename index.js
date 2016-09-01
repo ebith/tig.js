@@ -150,7 +150,6 @@ const twitter = {
               status = JSON.parse(line);
             } catch(e) {
               log(line);
-              status = null;
             }
             if (status.text || status.event) {
               eventEmitter.emit('tweet', status);
