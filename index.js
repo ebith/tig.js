@@ -225,7 +225,7 @@ const twitter = {
       text = '\00310\u267a\017' + ` ${status.retweeted_status.user.screen_name}: ${twitter.expandUrl(status.retweeted_status.text, status.retweeted_status.entities)} ` + '\00310>>\017' + ` @${status.quoted_status.user.screen_name}: ${twitter.expandUrl(status.quoted_status.text, status.quoted_status.entities)}` + '\00310[' + `${moment(status.retweeted_status.created_at, 'ddd MMM DD HH:mm:ss Z YYYY').fromNow()}` + ']\017';
     } else if (status.quoted_status) {
       name = status.user.screen_name;
-      text = `${twitter.expandUrl(status.text, status.entities)} ` + '\00310>>\017' + ` @${status.quoted_status.user.screen_name}: ${twitter.expandUrl(status.quoted_status.text, status.quoted_status.entities)}`
+      text = `${twitter.expandUrl(status.text, status.entities)} ` + '\00310>>\017' + ` @${status.quoted_status.user.screen_name}: ${twitter.expandUrl(status.quoted_status.text, status.quoted_status.entities)}`;
     } else if (status.retweeted_status) {
       name = status.user.screen_name;
       text = '\00310\u267a\017' + ` ${status.retweeted_status.user.screen_name}: ${twitter.expandUrl(status.retweeted_status.text, status.retweeted_status.entities)} ` + '\00310[' + `${moment(status.retweeted_status.created_at, 'ddd MMM DD HH:mm:ss Z YYYY').fromNow()}` + ']\017';
