@@ -1,6 +1,6 @@
 const config = require('./config');
 const eventEmitter = new (require('events'))();
-const moment = require('moment');
+const distanceInWordsToNow = require('date-fns/distance_in_words_to_now');
 const unescape = require('lodash.unescape');
 
 const log = (...args) => {
@@ -222,13 +222,13 @@ const twitter = {
       text = twitter.expandUrl(status.direct_message.text, status.direct_message.entities);
     } else if (status.quoted_status && status.retweeted_status) {
       name = status.user.screen_name;
-      text = '\00310\u267a\017' + ` ${status.retweeted_status.user.screen_name}: ${twitter.expandUrl(status.retweeted_status.text, status.retweeted_status.entities)} ` + '\00310>>\017' + ` @${status.quoted_status.user.screen_name}: ${twitter.expandUrl(status.quoted_status.text, status.quoted_status.entities)}` + '\00310[' + `${moment(status.retweeted_status.created_at, 'ddd MMM DD HH:mm:ss Z YYYY').fromNow()}` + ']\017';
+      text = '\00310\u267a\017' + ` ${status.retweeted_status.user.screen_name}: ${twitter.expandUrl(status.retweeted_status.text, status.retweeted_status.entities)} ` + '\00310>>\017' + ` @${status.quoted_status.user.screen_name}: ${twitter.expandUrl(status.quoted_status.text, status.quoted_status.entities)}` + '\00310[' + `${distanceInWordsToNow(status.retweeted_status.created_at, {addSuffix: true})}` + ']\017';
     } else if (status.quoted_status) {
       name = status.user.screen_name;
       text = `${twitter.expandUrl(status.text, status.entities)} ` + '\00310>>\017' + ` @${status.quoted_status.user.screen_name}: ${twitter.expandUrl(status.quoted_status.text, status.quoted_status.entities)}`;
     } else if (status.retweeted_status) {
       name = status.user.screen_name;
-      text = '\00310\u267a\017' + ` ${status.retweeted_status.user.screen_name}: ${twitter.expandUrl(status.retweeted_status.text, status.retweeted_status.entities)} ` + '\00310[' + `${moment(status.retweeted_status.created_at, 'ddd MMM DD HH:mm:ss Z YYYY').fromNow()}` + ']\017';
+      text = '\00310\u267a\017' + ` ${status.retweeted_status.user.screen_name}: ${twitter.expandUrl(status.retweeted_status.text, status.retweeted_status.entities)} ` + '\00310[' + `${distanceInWordsToNow(status.retweeted_status.created_at, {addSuffix: true})}` + ']\017';
     } else if (status.text) {
       name = status.user.screen_name;
       text = twitter.expandUrl(status.text, status.entities);

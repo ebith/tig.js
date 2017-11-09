@@ -10,8 +10,8 @@
   "author": "ebith",
   "license": "MIT",
   "dependencies": {
+    "date-fns": "^1.29.0",
     "lodash.unescape": "^4.0.0",
-    "moment": "^2.13.0",
     "oauth": "^0.9.14"
   },
   "devDependencies": {
