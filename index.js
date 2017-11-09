@@ -174,6 +174,23 @@ const twitter = {
     twitter.stream.end();
   },
   toReadable: (status, nick) => {
+    const fuckingExtended_tweet = (status) => {
+      if (status.extended_tweet) {
+        status.text = status.extended_tweet.full_text;
+        status.entities = status.extended_tweet.entities;
+      }
+      if (status.quoted_status && status.quoted_status.extended_tweet) {
+        status.quoted_status.text = status.quoted_status.extended_tweet.full_text;
+        status.quoted_status.entities = status.quoted_status.extended_tweet.entities;
+      }
+      if (status.retweeted_status && status.retweeted_status.extended_tweet) {
+        status.retweeted_status.text = status.retweeted_status.extended_tweet.full_text;
+        status.retweeted_status.entities = status.retweeted_status.extended_tweet.entities;
+      }
+      return status;
+    }
+    status = fuckingExtended_tweet(status);
+
     let name, text;
     if (status.event) {
       switch (status.event) {
