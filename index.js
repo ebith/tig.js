@@ -1,7 +1,7 @@
-const config = require('./config');
 const eventEmitter = new (require('events'))();
 const distanceInWordsToNow = require('date-fns/distance_in_words_to_now');
 const unescape = require('lodash.unescape');
+const argv = require('mri')(process.argv.slice(2));
 
 const log = (...args) => {
   if (process.env.NODE_ENV === 'development') {
@@ -87,7 +87,7 @@ const ircd = {
                   }
                 } else {
                   const text = args.slice(1).join(' ').replace(/^:/, '');
-                  twitter.oauth.post('https://api.twitter.com/1.1/statuses/update.json', config.accessToken, config.accessTokenSecret, { status: text }, (error, data, response) => {
+                  twitter.oauth.post('https://api.twitter.com/1.1/statuses/update.json', argv.accessToken, argv.accessTokenSecret, { status: text }, (error, data, response) => {
                     if (error) { log(error); }
                   });
                 }
@@ -118,12 +118,12 @@ const twitter = {
     return text;
   },
   getLastStatus: (screen_name, callback) => {
-    twitter.oauth.get(`https://api.twitter.com/1.1/users/show.json?screen_name=${screen_name}`, config.accessToken, config.accessTokenSecret, (error, data, response) => {
+    twitter.oauth.get(`https://api.twitter.com/1.1/users/show.json?screen_name=${screen_name}`, argv.accessToken, argv.accessTokenSecret, (error, data, response) => {
       callback(JSON.parse(data));
     });
   },
   init: () => {
-    twitter.oauth = new (require('oauth')).OAuth( 'https://twitter.com/oauth/request_token', 'https://twitter.com/oauth/access_token', config.consumerKey, config.consumerSecret, '1.0A', null, 'HMAC-SHA1');
+    twitter.oauth = new (require('oauth')).OAuth( 'https://twitter.com/oauth/request_token', 'https://twitter.com/oauth/access_token', argv.consumerKey, argv.consumerSecret, '1.0A', null, 'HMAC-SHA1');
     twitter.connect();
   },
   reconnectCount: 0,
@@ -134,8 +134,8 @@ const twitter = {
     ircd.send(null, 'NOTICE', ['#timeline', 'Reconnecting stream']);
   },
   connect: () => {
-    twitter.stream = twitter.oauth.get('https://userstream.twitter.com/1.1/user.json?replies=all', config.accessToken, config.accessTokenSecret);
-    // twitter.stream = oauth.get('https://stream.twitter.com/1.1/statuses/sample.json', config.accessToken, config.accessTokenSecret);
+    twitter.stream = twitter.oauth.get('https://userstream.twitter.com/1.1/user.json?replies=all', argv.accessToken, argv.accessTokenSecret);
+    // twitter.stream = oauth.get('https://stream.twitter.com/1.1/statuses/sample.json', argv.accessToken, argv.accessTokenSecret);
 
     twitter.stream.on('response', (response) => {
       response.setEncoding('utf8');
