@@ -157,6 +157,7 @@ const twitter = {
             let status;
             try {
               status = JSON.parse(line);
+              if (argv.verbose) { console.log(line); }
             } catch(e) {
               log(line);
             }
