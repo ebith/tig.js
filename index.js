@@ -52,8 +52,6 @@ const ircd = {
               ircd.send(null, '001', [nick, 'Welcome to tig.js']);
               ircd.send(`${args[0]}!${args[3]}@${connection.remoteAddress}`, 'JOIN', ['#timeline']);
               ircd.send(null, 'MODE', ['#timeline', '+mot', args[0]]);
-              ircd.send(`${args[0]}!${args[3]}@${connection.remoteAddress}`, 'JOIN', ['#urls']);
-              ircd.send(null, 'MODE', ['#urls', '+mot', args[0]]);
 
               twitter.getLastStatus(args[0], (user) => {
                 ircd.send(null, 'TOPIC', ['#timeline', user.status.text]);
@@ -66,9 +64,6 @@ const ircd = {
                     ircd.send(null, 'TOPIC', ['#timeline', text]);
                   } else {
                     ircd.send(name, 'PRIVMSG', ['#timeline', text]);
-                    if (/https?:\/\/(?!twitter\.com)/.test(text)) {
-                      ircd.send(name, 'PRIVMSG', ['#urls', text]);
-                    }
                   }
                 } else {
                   log(this);
