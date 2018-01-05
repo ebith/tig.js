@@ -129,7 +129,7 @@ const twitter = {
   reconnectCount: 0,
   reconnect: () => {
     twitter.stream.abort();
-    setTimeout(()=>{ twitter.connect(); }, Math.pow(2, twitter.count) * 1000);
+    setTimeout(()=>{ twitter.connect(); }, Math.pow(2, twitter.reconnectCount) * 1000);
     twitter.reconnectCount++;
     ircd.send(null, 'NOTICE', ['#timeline', 'Reconnecting stream']);
   },
