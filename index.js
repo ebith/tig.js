@@ -134,6 +134,13 @@ const twitter = {
     ircd.send(null, 'NOTICE', ['#timeline', 'Reconnecting stream']);
   },
   connect: () => {
+    setTimeout(()=>{
+      twitter.reconnectCount = 0;
+      twitter.stream.abort();
+      twitter.connect();
+      ircd.send(null, 'NOTICE', ['#timeline', 'Refreshing connection']);
+    }, 60 * 60 * 24 * 7 * 1000);
+
     twitter.stream = twitter.oauth.get('https://userstream.twitter.com/1.1/user.json?replies=all', argv.accessToken, argv.accessTokenSecret);
     // twitter.stream = oauth.get('https://stream.twitter.com/1.1/statuses/sample.json', argv.accessToken, argv.accessTokenSecret);
 
