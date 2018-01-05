@@ -9,7 +9,6 @@ const log = (...args) => {
   }
 }
 
-// IRCD {{{
 const ircd = {
   send: (prefix, command, params = ['']) => {
     let msg = '';
@@ -106,9 +105,7 @@ const ircd = {
   }
 }
 ircd.init();
-// }}}
 
-// Twitter {{{
 const twitter = {
   expandUrl: (text, entities) => {
     const urls = entities.media ? entities.urls.concat(entities.media) : entities.urls;
@@ -264,4 +261,3 @@ const twitter = {
   }
 }
 twitter.init();
-// }}}
